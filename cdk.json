@@ -1,0 +1,213 @@
+{
+  "app": "npx ts-node --prefer-ts-exts bin/awscdk.ts",
+  "watch": {
+    "include": [
+      "**"
+    ],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "**/*.d.ts",
+      "**/*.js",
+      "tsconfig.json",
+      "package*.json",
+      "yarn.lock",
+      "node_modules",
+      "test"
+    ]
+  },
+    "context":{
+      "Vpc":{
+      "project":"personal",
+      "cidr":"10.0.0.0/16",
+      "maxaz": 2,
+      "natGateway":0,
+      "location":"ap-northeast-1",
+      "availabilityZones":["a","c"]
+      },
+      "Subnet":{
+          "cidr":24,
+          "public":{
+              "number":2,
+              "name":["alb","ec2"]
+          },
+          "private":{
+              "number":0,
+              "name":[""]
+          },
+          "Isolated":{
+              "number":1,
+              "name":["db"]
+          }
+      },
+      "SG": {
+        "default": {
+          "rules": [
+            {
+              "protocol": "n",
+              "ip": "0.0.0.0/0",
+              "port": 0,
+              "direction": "in"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "name": "LoadBalancerSG",
+            "allowAllOutbound":false,
+            "rules": [
+              {
+                "protocol": "anyIpv4",
+                "port": 80,
+                "direction": "in"
+              },
+              {
+                "protocol": "anyIpv4",
+                "port": 80,
+                "direction": "out"
+              },
+              {
+                "protocol": "Ec2SG",
+                "direction": "out"
+              }
+            ]
+          }, 
+          {
+            "name":"Ec2SG",
+            "allowAllOutbound":true,
+            "rules":[
+                {
+                    "protocol":"LoadBalancerSG",
+                    "port": 80
+                }
+            ]
+          },
+          {
+            "name":"DbSubnetSG",
+            "allowAllOutbound":true,
+            "rules":[
+                {
+                    "protocol":"Ec2SG",
+                    "port": 3306
+                }
+            ]
+          }
+        ]
+      },
+      "EC2":{
+        "Rolename":"sampleRole",
+        "default":{
+          "settings":[
+            {
+            "instaceType":"t2.micro",
+            "machinetype":"linux",
+            "machineregion":"",
+            "machineImageurl":"",
+            "userData":[""]
+            }
+          ]
+        },
+          "groups":[
+            {
+            "name":"EC2_1",
+            "userData_need":true,
+            "keyName":"ec2_key1",
+            "settings":[
+              {
+              "instaceType":"t2.micro",
+              "subnet":["personal-ec2-a"],
+              "machinetype":"linux",
+              "machineregion":"",
+              "machineImageurl":"",
+              "secrity":"Ec2SG",
+              "availabilityZones":["ap-northeast-1a"],
+              "userData":["sudo yum update -y","sudo yum install -y java-1.8.0-openjdk-devel"]
+                }
+            ]
+            },
+            {
+              "name":"EC2_2",
+              "userData_need":false,
+              "keyName":"ec2_key2",
+              "settings":[{
+              "instaceType":"t2.micro",
+              "subnet":["personal-ec2-c"],
+              "machinetype":"linux",
+              "machineregion":"",
+              "machineImageurl":"",
+              "secrity":"Ec2SG",
+              "availabilityZones":["ap-northeast-1c"],
+              "userData":[""]
+                }]
+              }  
+            ]
+          },
+          "defaultRdsSettings": {
+            "rdsName": "myrds",
+            "username": "myuser",
+            "subnet":  ["personal-db-a","personal-db-c"],
+            "dbSecurity": ["DbSubnetSG"],
+            "engineType": "mysql",
+            "subnetGroupName": "DBSubnetGroup",
+            "dbSubnetGroupDescription": "dbSubnetGroupDescription",
+            "endpointName": "ClusterEndpoint",
+            "secretsmanagerName": "DatabaseSecret",     
+            "excludePunctuation": true,
+            "includeSpace": false,
+            "generateStringKey": "password",
+            "defaultDatabaseName": "databaseName",
+            "engineVersion": "8.0.34",
+            "instanceClass": "T2",
+            "instanceSize": "MICRO",
+            "removalPolicy": "DESTROY"
+        },
+          "ALB":{
+            "subnet":["personal-alb-a","personal-alb-c"],
+            "security":["LoadBalancerSG"],
+            "http":{
+                "port":80,
+                "open":true
+            },
+            "path":["app1","app2"],
+            "port":80
+          }
+        },
+        
+    "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": true,
+    "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": true,
+    "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:validateSnapshotRemovalPolicy": true,
+    "@aws-cdk/aws-codepipeline:crossAccountKeyAliasStackSafeResourceName": true,
+    "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true,
+    "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": true,
+    "@aws-cdk/aws-apigateway:disableCloudWatchRole": true,
+    "@aws-cdk/core:enablePartitionLiterals": true,
+    "@aws-cdk/aws-events:eventsTargetQueueSameAccount": true,
+    "@aws-cdk/aws-iam:standardizedServicePrincipals": true,
+    "@aws-cdk/aws-ecs:disableExplicitDeploymentControllerForCircuitBreaker": true,
+    "@aws-cdk/aws-iam:importedRoleStackSafeDefaultPolicyName": true,
+    "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": true,
+    "@aws-cdk/aws-route53-patters:useCertificate": true,
+    "@aws-cdk/customresources:installLatestAwsSdkDefault": false,
+    "@aws-cdk/aws-rds:databaseProxyUniqueResourceName": true,
+    "@aws-cdk/aws-codedeploy:removeAlarmsFromDeploymentGroup": true,
+    "@aws-cdk/aws-apigateway:authorizerChangeDeploymentLogicalId": true,
+    "@aws-cdk/aws-ec2:launchTemplateDefaultUserData": true,
+    "@aws-cdk/aws-secretsmanager:useAttachedSecretResourcePolicyForSecretTargetAttachments": true,
+    "@aws-cdk/aws-redshift:columnId": true,
+    "@aws-cdk/aws-stepfunctions-tasks:enableEmrServicePolicyV2": true,
+    "@aws-cdk/aws-ec2:restrictDefaultSecurityGroup": true,
+    "@aws-cdk/aws-apigateway:requestValidatorUniqueId": true,
+    "@aws-cdk/aws-kms:aliasNameRef": true,
+    "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": true,
+    "@aws-cdk/core:includePrefixInUniqueNameGeneration": true,
+    "@aws-cdk/aws-efs:denyAnonymousAccess": true,
+    "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": true,
+    "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": true,
+    "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": true,
+    "@aws-cdk/aws-rds:auroraClusterChangeScopeOfInstanceParameterGroupWithEachParameters": true,
+    "@aws-cdk/aws-appsync:useArnForSourceApiAssociationIdentifier": true,
+    "@aws-cdk/aws-rds:preventRenderingDeprecatedCredentials": true,
+    "@aws-cdk/aws-codepipeline-actions:useNewDefaultBranchForCodeCommitSource": true
+    }
