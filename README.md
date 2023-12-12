@@ -1,8 +1,8 @@
 ## 概要
 このプロジェクトは、AWS Cloud Development Kit (AWS CDK)を使用してAmazon EC2+ALB+RDSの作成が出来ます。
 
-##　構成
-![Ec2composition](https://github.com/iput2021-mamiya/AWSEC2/assets/130954520/eaba84ad-55c8-4c70-bac0-2a078aa96fe7)
+## 構成
+![Ec2composition](https://github.com/iput2021-mamiya/AWSEC2/assets/130954520/fcd69a57-344e-4b14-8d4d-51959ca9ebc1)
 ## 必要条件
 - Node.js 10.3.0以上
 - Tyepscript
