@@ -26,4 +26,4 @@
 このプロジェクトはMITライセンスの下でライセンスされています。
 
 ## 協力者
-1. Yamamoto Teppei
+1. Yamamoto Teppei https://github.com/teppei-yama
